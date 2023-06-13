@@ -117,6 +117,21 @@ func (e *EntryQueryBuilder) WithCategoryID(categoryID int64) *EntryQueryBuilder 
 	return e
 }
 
+// WithCTagID filter by ctag ID.
+func (e *EntryQueryBuilder) WithCTagID(ctagID int64) *EntryQueryBuilder {
+	if ctagID > 0 {
+		e.conditions = append(e.conditions, fmt.Sprintf(`
+			e.id in (
+				SELECT ec.entry_id
+				FROM entry_ctags ec
+				JOIN ctags t ON ec.ctag_id = t.id
+				WHERE t.id = $%d
+			)`, len(e.args)+1))
+		e.args = append(e.args, ctagID)
+	}
+	return e
+}
+
 // WithStatus filter by entry status.
 func (e *EntryQueryBuilder) WithStatus(status string) *EntryQueryBuilder {
 	if status != "" {

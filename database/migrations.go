@@ -668,4 +668,28 @@ var migrations = []func(tx *sql.Tx) error{
 		_, err = tx.Exec(sql)
 		return err
 	},
+	func(tx *sql.Tx) (err error) {
+		sql := `
+			CREATE TABLE ctags (
+				id serial not null,
+				user_id int not null,
+				title text not null,
+				primary key (id),
+				unique (user_id, title),
+				foreign key (user_id) references users(id) on delete cascade
+			);
+
+			CREATE TABLE entry_ctags (
+				id bigserial not null,
+				entry_id bigint not null,
+				ctag_id int not null,
+				primary key (id),
+				unique (entry_id, ctag_id),
+				foreign key (entry_id) references entries(id) on delete cascade,
+				foreign key (ctag_id) references ctags(id) on delete cascade
+			);
+		`
+		_, err = tx.Exec(sql)
+		return err
+	},
 }

@@ -84,19 +84,24 @@ func (h *handler) getEntry(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) getFeedEntries(w http.ResponseWriter, r *http.Request) {
 	feedID := request.RouteInt64Param(r, "feedID")
-	h.findEntries(w, r, feedID, 0)
+	h.findEntries(w, r, feedID, 0, 0)
 }
 
 func (h *handler) getCategoryEntries(w http.ResponseWriter, r *http.Request) {
 	categoryID := request.RouteInt64Param(r, "categoryID")
-	h.findEntries(w, r, 0, categoryID)
+	h.findEntries(w, r, 0, categoryID, 0)
+}
+
+func (h *handler) getCTagEntries(w http.ResponseWriter, r *http.Request) {
+	ctagID := request.RouteInt64Param(r, "ctagID")
+	h.findEntries(w, r, 0, 0, ctagID)
 }
 
 func (h *handler) getEntries(w http.ResponseWriter, r *http.Request) {
-	h.findEntries(w, r, 0, 0)
+	h.findEntries(w, r, 0, 0, 0)
 }
 
-func (h *handler) findEntries(w http.ResponseWriter, r *http.Request, feedID int64, categoryID int64) {
+func (h *handler) findEntries(w http.ResponseWriter, r *http.Request, feedID int64, categoryID int64, ctagID int64) {
 	statuses := request.QueryStringParamList(r, "status")
 	for _, status := range statuses {
 		if err := validator.ValidateEntryStatus(status); err != nil {
@@ -137,11 +142,18 @@ func (h *handler) findEntries(w http.ResponseWriter, r *http.Request, feedID int
 		return
 	}
 
+	ctagID = request.QueryInt64Param(r, "ctag_id", ctagID)
+	if ctagID > 0 && !h.store.CTagIDExists(userID, ctagID) {
+		json.BadRequest(w, r, errors.New("Invalid CTag ID"))
+		return
+	}
+
 	tags := request.QueryStringParamList(r, "tags")
 
 	builder := h.store.NewEntryQueryBuilder(userID)
 	builder.WithFeedID(feedID)
 	builder.WithCategoryID(categoryID)
+	builder.WithCTagID(ctagID)
 	builder.WithStatuses(statuses)
 	builder.WithOrder(order)
 	builder.WithDirection(direction)
