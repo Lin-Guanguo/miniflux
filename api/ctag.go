@@ -78,6 +78,16 @@ func (h *handler) getCTags(w http.ResponseWriter, r *http.Request) {
 	json.OK(w, r, ctags)
 }
 
+func (h *handler) getCTagsTree(w http.ResponseWriter, r *http.Request) {
+	ctagsTree, err := h.store.CTagsTree(request.UserID(r))
+	if err != nil {
+		json.ServerError(w, r, err)
+		return
+	}
+
+	json.OK(w, r, ctagsTree)
+}
+
 func (h *handler) removeCTag(w http.ResponseWriter, r *http.Request) {
 	userID := request.UserID(r)
 	ctagID := request.RouteInt64Param(r, "ctagID")

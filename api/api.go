@@ -48,6 +48,7 @@ func Serve(router *mux.Router, store *storage.Storage, pool *worker.Pool) {
 	sr.HandleFunc("/categories/{categoryID}/entries/{entryID}", handler.getCategoryEntry).Methods(http.MethodGet)
 	sr.HandleFunc("/ctags", handler.createCTag).Methods(http.MethodPost)
 	sr.HandleFunc("/ctags", handler.getCTags).Methods(http.MethodGet)
+	sr.HandleFunc("/ctags/tree", handler.getCTagsTree).Methods(http.MethodGet)
 	sr.HandleFunc("/ctags/{ctagID}", handler.updateCTag).Methods(http.MethodPut)
 	sr.HandleFunc("/ctags/{ctagID}", handler.removeCTag).Methods(http.MethodDelete)
 	sr.HandleFunc("/ctags/entries", handler.addEntryCTags).Methods(http.MethodPost)

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 
 	"miniflux.app/model"
 )
@@ -86,6 +88,59 @@ func (s *Storage) CTags(userID int64) (model.CTags, error) {
 	}
 
 	return ctags, nil
+}
+
+func (s *Storage) CTagsTree(userID int64) (model.CTagsTreeRoot, error) {
+	ctags, err := s.CTags(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	type TagInfo struct {
+		ID         int64
+		Title      string
+		TitleParts []string
+	}
+
+	ctagsInfo := make([]TagInfo, 0)
+	for _, ctag := range ctags {
+		ctagsInfo = append(ctagsInfo, TagInfo{
+			ID:         ctag.ID,
+			Title:      ctag.Title,
+			TitleParts: strings.Split(ctag.Title, "/"),
+		})
+	}
+
+	// sort ctagsInfo by part len
+	sort.SliceStable(ctagsInfo, func(i, j int) bool {
+		return len(ctagsInfo[i].TitleParts) < len(ctagsInfo[j].TitleParts)
+	})
+
+	root := make(model.CTagsTreeRoot, 0)
+	dict := make(map[string]*model.CTagsTree)
+
+	for _, ctagInfo := range ctagsInfo {
+		treeNode := &model.CTagsTree{
+			ID:       ctagInfo.ID,
+			Title:    ctagInfo.TitleParts[len(ctagInfo.TitleParts)-1],
+			Children: []*model.CTagsTree{},
+		}
+
+		if len(ctagInfo.TitleParts) == 1 {
+			root = append(root, treeNode)
+			dict[ctagInfo.Title] = treeNode
+			continue
+		}
+
+		parent := ctagInfo.Title[0:strings.LastIndex(ctagInfo.Title, "/")]
+		if _, ok := dict[parent]; !ok {
+			return nil, fmt.Errorf("store: unable to find parent tag %q for %q", parent, ctagInfo.Title)
+		}
+		dict[parent].Children = append(dict[parent].Children, treeNode)
+		dict[ctagInfo.Title] = treeNode
+	}
+
+	return root, nil
 }
 
 // CreateCTag creates a new ctag.

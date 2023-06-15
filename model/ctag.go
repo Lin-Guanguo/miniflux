@@ -42,3 +42,11 @@ type EntryCTagsRequest struct {
 type CTags []*CTag
 
 type EntryCTags []*EntryCTag
+
+type CTagsTree struct {
+	ID       int64        `json:"id"`
+	Title    string       `json:"title"`
+	Children []*CTagsTree `json:"children"`
+}
+
+type CTagsTreeRoot []*CTagsTree
