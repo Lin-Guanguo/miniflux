@@ -52,7 +52,7 @@ func Serve(router *mux.Router, store *storage.Storage, pool *worker.Pool) {
 	sr.HandleFunc("/ctags/{ctagID}", handler.updateCTag).Methods(http.MethodPut)
 	sr.HandleFunc("/ctags/{ctagID}", handler.removeCTag).Methods(http.MethodDelete)
 	sr.HandleFunc("/ctags/entries", handler.addEntryCTags).Methods(http.MethodPost)
-	sr.HandleFunc("/ctags/entries", handler.removeEntryCTags).Methods(http.MethodDelete)
+	sr.HandleFunc("/ctags/entries/delete", handler.removeEntryCTags).Methods(http.MethodPost)
 	sr.HandleFunc("/ctags/{ctagID}/entries", handler.getCTagEntries).Methods(http.MethodGet)
 	sr.HandleFunc("/ctags/entry/{entryID}", handler.getEntryCTags).Methods(http.MethodGet)
 	sr.HandleFunc("/discover", handler.discoverSubscriptions).Methods(http.MethodPost)

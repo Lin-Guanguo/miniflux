@@ -93,6 +93,7 @@ func Serve(router *mux.Router, store *storage.Storage, pool *worker.Pool) {
 	uiRouter.HandleFunc("/category/{categoryID}/mark-all-as-read", handler.markCategoryAsRead).Name("markCategoryAsRead").Methods(http.MethodPost)
 
 	// CustomTags
+	uiRouter.HandleFunc("/ctags/{ctagID}/entry/{entryID}", handler.showCategoryEntryPage /* TODO */).Name("ctagEntry").Methods(http.MethodGet)
 	uiRouter.HandleFunc("/ctags", handler.showCTagListPage).Name("ctags").Methods(http.MethodGet)
 	uiRouter.HandleFunc("/ctags/{ctagID}/entries", handler.showCTagEntriesPage).Name("ctagEntries").Methods(http.MethodGet)
 	uiRouter.HandleFunc("/ctags/{ctagID}/entries/all", handler.showCTagEntriesAllPage).Name("ctagEntriesAll").Methods(http.MethodGet)
