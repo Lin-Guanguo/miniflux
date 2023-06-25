@@ -85,6 +85,9 @@
                 <li {{ if eq .menu "categories" }}class="active"{{ end }} title="{{ t "tooltip.keyboard_shortcuts" "g c" }}">
                     <a href="{{ route "categories" }}" data-page="categories">{{ t "menu.categories" }}</a>
                 </li>
+                <li {{ if eq .menu "ctags" }}class="active"{{ end }} title="{{ t "tooltip.keyboard_shortcuts" "g t" }}">
+                    <a href="{{ route "ctags" }}" data-page="ctags">{{ t "menu.ctags" }}</a>
+                </li>
                 <li {{ if eq .menu "settings" }}class="active"{{ end }} title="{{ t "tooltip.keyboard_shortcuts" "g s" }}">
                     <a href="{{ route "settings" }}" data-page="settings">{{ t "menu.settings" }}</a>
                 </li>

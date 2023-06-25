@@ -1085,3 +1085,40 @@ details.entry-enclosures {
 audio,video {
     width: 100%;
 }
+
+.ctagsTree ul li {
+    margin-left: 15px
+}
+.ctagsTree ul li ul li {
+    margin-left: 30px
+}
+.ctagsTree ul li ul li ul li {
+    margin-left: 45px
+}
+.ctagsTree ul li ul li ul li ul li {
+    margin-left: 60px
+}
+.ctagsTree ul li ul li ul li ul li ul li {
+    margin-left: 75px
+}
+.ctagsTree ul li ul li ul li ul li ul li ul li {
+    margin-left: 90px
+}
+.ctagsTree ul li ul li ul li ul li ul li ul li ul li {
+    margin-left: 105px
+}
+.ctagsTree ul li ul li ul li ul li ul li ul li ul li ul li {
+    margin-left: 120px
+}
+.ctagsTree ul li ul li ul li ul li ul li ul li ul li ul li ul li {
+    margin-left: 135px
+}
+.ctagsTree ul li ul li ul li ul li ul li ul li ul li ul li ul li ul li {
+    margin-left: 150px
+}
+.ctagsTree ul li ul li ul li ul li ul li ul li ul li ul li ul li ul li ul li {
+    margin-left: 165px
+}
+.ctagsTree ul li ul li ul li ul li ul li ul li ul li ul li ul li ul li ul li ul li {
+    margin-left: 180px
+}

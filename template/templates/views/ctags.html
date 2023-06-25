@@ -1,0 +1,16 @@
+{{ define "title"}}{{ t "page.ctags.title" }} ({{ .total }}){{ end }}
+
+{{ define "content"}}
+<section class="page-header">
+    <h1>{{ t "page.ctags.title" }}</h1>
+    <ul>
+        <li>
+            <!-- TODO: createCTags -->
+        </li>
+    </ul>
+</section>
+
+<div class="ctagsTree">
+    {{ renderCTagsTree .ctagsTree }}
+</div>
+{{ end }}

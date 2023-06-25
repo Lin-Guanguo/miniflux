@@ -92,6 +92,12 @@ func Serve(router *mux.Router, store *storage.Storage, pool *worker.Pool) {
 	uiRouter.HandleFunc("/category/{categoryID}/remove", handler.removeCategory).Name("removeCategory").Methods(http.MethodPost)
 	uiRouter.HandleFunc("/category/{categoryID}/mark-all-as-read", handler.markCategoryAsRead).Name("markCategoryAsRead").Methods(http.MethodPost)
 
+	// CustomTags
+	uiRouter.HandleFunc("/ctags", handler.showCTagListPage).Name("ctags").Methods(http.MethodGet)
+	uiRouter.HandleFunc("/ctags/{ctagID}/entries", handler.showCTagEntriesPage).Name("ctagEntries").Methods(http.MethodGet)
+	uiRouter.HandleFunc("/ctags/{ctagID}/entries/all", handler.showCTagEntriesAllPage).Name("ctagEntriesAll").Methods(http.MethodGet)
+	uiRouter.HandleFunc("/ctags/{ctagID}/mark-all-as-read", handler.markCTagAsRead).Name("markCTagAsRead").Methods(http.MethodPost)
+
 	// Entry pages.
 	uiRouter.HandleFunc("/entry/status", handler.updateEntriesStatus).Name("updateEntriesStatus").Methods(http.MethodPost)
 	uiRouter.HandleFunc("/entry/save/{entryID}", handler.saveEntry).Name("saveEntry").Methods(http.MethodPost)

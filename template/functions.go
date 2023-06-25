@@ -5,6 +5,7 @@
 package template // import "miniflux.app/template"
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"math"
@@ -118,6 +119,25 @@ func (f *funcMap) Map() template.FuncMap {
 		},
 		"plural": func(key string, n int, args ...interface{}) string {
 			return ""
+		},
+		"renderCTagsTree": func(ctags []*model.CTagsTree) template.HTML {
+			subTpl := template.Must(template.New("sub").Parse(`
+				<ul>
+				{{range .}}
+					<li><a href="/ctags/{{.ID}}/entries/all">{{.Title}}</a>
+						{{if .Children}}
+							{{template "sub" .Children}}
+						{{end}}
+					</li>
+				{{end}}
+				</ul>
+			`))
+			var buf bytes.Buffer
+			err := subTpl.Execute(&buf, ctags)
+			if err != nil {
+				panic(err)
+			}
+			return template.HTML(buf.String())
 		},
 	}
 }
