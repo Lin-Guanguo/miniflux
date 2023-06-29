@@ -19,6 +19,11 @@ type entriesResponse struct {
 	Entries model.Entries `json:"entries"`
 }
 
+type entriesEnclosuresResponse struct {
+	Total             int                     `json:"total"`
+	EntriesEnclosures model.EntriesEnclosures `json:"entries_enclosures"`
+}
+
 type feedCreationResponse struct {
 	FeedID int64 `json:"feed_id"`
 }

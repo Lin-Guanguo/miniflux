@@ -84,68 +84,79 @@ func (h *handler) getEntry(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) getFeedEntries(w http.ResponseWriter, r *http.Request) {
 	feedID := request.RouteInt64Param(r, "feedID")
-	h.findEntries(w, r, feedID, 0, 0)
+	h.findEntries(w, r, feedID, 0, 0, "")
 }
 
 func (h *handler) getCategoryEntries(w http.ResponseWriter, r *http.Request) {
 	categoryID := request.RouteInt64Param(r, "categoryID")
-	h.findEntries(w, r, 0, categoryID, 0)
+	h.findEntries(w, r, 0, categoryID, 0, "")
 }
 
 func (h *handler) getCTagEntries(w http.ResponseWriter, r *http.Request) {
 	ctagID := request.RouteInt64Param(r, "ctagID")
-	h.findEntries(w, r, 0, 0, ctagID)
+	h.findEntries(w, r, 0, 0, ctagID, "")
 }
 
 func (h *handler) getEntries(w http.ResponseWriter, r *http.Request) {
-	h.findEntries(w, r, 0, 0, 0)
+	h.findEntries(w, r, 0, 0, 0, "")
 }
 
-func (h *handler) findEntries(w http.ResponseWriter, r *http.Request, feedID int64, categoryID int64, ctagID int64) {
+func (h *handler) searchEntries(w http.ResponseWriter, r *http.Request) {
+	var entriesSearchRequest model.EntriesSearchRequest
+	if err := json_parser.NewDecoder(r.Body).Decode(&entriesSearchRequest); err != nil {
+		json.BadRequest(w, r, err)
+		return
+	}
+	h.findEntries(w, r, 0, 0, 0, entriesSearchRequest.Condition)
+}
+
+func (h *handler) searchEntriesEnclosures(w http.ResponseWriter, r *http.Request) {
+	var entriesSearchRequest model.EntriesSearchRequest
+	if err := json_parser.NewDecoder(r.Body).Decode(&entriesSearchRequest); err != nil {
+		json.BadRequest(w, r, err)
+		return
+	}
+	h.findEntriesEnclosures(w, r, 0, 0, 0, entriesSearchRequest.Condition)
+}
+
+func (h *handler) buildQuery(r *http.Request, feedID int64, categoryID int64, ctagID int64, condition string) (*storage.EntryQueryBuilder, error) {
 	statuses := request.QueryStringParamList(r, "status")
 	for _, status := range statuses {
 		if err := validator.ValidateEntryStatus(status); err != nil {
-			json.BadRequest(w, r, err)
-			return
+			return nil, err
 		}
 	}
 
 	order := request.QueryStringParam(r, "order", model.DefaultSortingOrder)
 	if err := validator.ValidateEntryOrder(order); err != nil {
-		json.BadRequest(w, r, err)
-		return
+		return nil, err
 	}
 
 	direction := request.QueryStringParam(r, "direction", model.DefaultSortingDirection)
 	if err := validator.ValidateDirection(direction); err != nil {
-		json.BadRequest(w, r, err)
-		return
+		return nil, err
 	}
 
 	limit := request.QueryIntParam(r, "limit", 100)
 	offset := request.QueryIntParam(r, "offset", 0)
 	if err := validator.ValidateRange(offset, limit); err != nil {
-		json.BadRequest(w, r, err)
-		return
+		return nil, err
 	}
 
 	userID := request.UserID(r)
 	categoryID = request.QueryInt64Param(r, "category_id", categoryID)
 	if categoryID > 0 && !h.store.CategoryIDExists(userID, categoryID) {
-		json.BadRequest(w, r, errors.New("Invalid category ID"))
-		return
+		return nil, errors.New("Invalid category ID")
 	}
 
 	feedID = request.QueryInt64Param(r, "feed_id", feedID)
 	if feedID > 0 && !h.store.FeedExists(userID, feedID) {
-		json.BadRequest(w, r, errors.New("Invalid feed ID"))
-		return
+		return nil, errors.New("Invalid feed ID")
 	}
 
 	ctagID = request.QueryInt64Param(r, "ctag_id", ctagID)
 	if ctagID > 0 && !h.store.CTagIDExists(userID, ctagID) {
-		json.BadRequest(w, r, errors.New("Invalid CTag ID"))
-		return
+		return nil, errors.New("Invalid CTag ID")
 	}
 
 	tags := request.QueryStringParamList(r, "tags")
@@ -154,6 +165,7 @@ func (h *handler) findEntries(w http.ResponseWriter, r *http.Request, feedID int
 	builder.WithFeedID(feedID)
 	builder.WithCategoryID(categoryID)
 	builder.WithCTagID(ctagID)
+	builder.WithCondition(condition)
 	builder.WithStatuses(statuses)
 	builder.WithOrder(order)
 	builder.WithDirection(direction)
@@ -161,6 +173,14 @@ func (h *handler) findEntries(w http.ResponseWriter, r *http.Request, feedID int
 	builder.WithLimit(limit)
 	builder.WithTags(tags)
 	configureFilters(builder, r)
+	return builder, nil
+}
+
+func (h *handler) findEntries(w http.ResponseWriter, r *http.Request, feedID int64, categoryID int64, ctagID int64, condition string) {
+	builder, err := h.buildQuery(r, feedID, categoryID, ctagID, condition)
+	if err != nil {
+		json.BadRequest(w, r, err)
+	}
 
 	entries, err := builder.GetEntries()
 	if err != nil {
@@ -179,6 +199,27 @@ func (h *handler) findEntries(w http.ResponseWriter, r *http.Request, feedID int
 	}
 
 	json.OK(w, r, &entriesResponse{Total: count, Entries: entries})
+}
+
+func (h *handler) findEntriesEnclosures(w http.ResponseWriter, r *http.Request, feedID int64, categoryID int64, ctagID int64, condition string) {
+	builder, err := h.buildQuery(r, feedID, categoryID, ctagID, condition)
+	if err != nil {
+		json.BadRequest(w, r, err)
+	}
+
+	entriesEnclosures, err := builder.GetEntriesEnclosures()
+	if err != nil {
+		json.ServerError(w, r, err)
+		return
+	}
+
+	count, err := builder.CountEntriesEnclosures()
+	if err != nil {
+		json.ServerError(w, r, err)
+		return
+	}
+
+	json.OK(w, r, &entriesEnclosuresResponse{Total: count, EntriesEnclosures: entriesEnclosures})
 }
 
 func (h *handler) setEntryStatus(w http.ResponseWriter, r *http.Request) {

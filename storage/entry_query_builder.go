@@ -132,6 +132,14 @@ func (e *EntryQueryBuilder) WithCTagID(ctagID int64) *EntryQueryBuilder {
 	return e
 }
 
+// WithCondition filter by user define condition.
+func (e *EntryQueryBuilder) WithCondition(condition string) *EntryQueryBuilder {
+	if len(condition) > 0 {
+		e.conditions = append(e.conditions, condition)
+	}
+	return e
+}
+
 // WithStatus filter by entry status.
 func (e *EntryQueryBuilder) WithStatus(status string) *EntryQueryBuilder {
 	if status != "" {
@@ -231,6 +239,26 @@ func (e *EntryQueryBuilder) CountEntries() (count int, err error) {
 	err = e.store.db.QueryRow(fmt.Sprintf(query, condition), e.args...).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("unable to count entries: %v", err)
+	}
+
+	return count, nil
+}
+
+// CountEntries count the number of entries that match the condition.
+func (e *EntryQueryBuilder) CountEntriesEnclosures() (count int, err error) {
+	query := `
+		SELECT count(*)
+		FROM entries e
+			JOIN feeds f ON f.id = e.feed_id
+			JOIN categories c ON c.id = f.category_id
+			JOIN enclosures a ON a.entry_id=e.id
+		WHERE %s
+	`
+	condition := e.buildCondition()
+
+	err = e.store.db.QueryRow(fmt.Sprintf(query, condition), e.args...).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("unable to count entries enclusures: %v", err)
 	}
 
 	return count, nil
@@ -381,6 +409,80 @@ func (e *EntryQueryBuilder) GetEntries() (model.Entries, error) {
 	}
 
 	return entries, nil
+}
+
+// GetEntries returns a list of entries that match the condition.
+func (e *EntryQueryBuilder) GetEntriesEnclosures() (model.EntriesEnclosures, error) {
+	query := `
+		SELECT
+			e.id,
+			e.user_id,
+			e.feed_id,
+			e.hash,
+			e.published_at at time zone u.timezone,
+			e.title,
+			e.url,
+			e.tags,
+			a.id as enclosure_id,
+			a.url as enclosure_url,
+			a.size,
+			a.mime_type,
+			u.timezone
+		FROM
+			entries e
+		LEFT JOIN
+			feeds f ON f.id=e.feed_id
+		LEFT JOIN
+			categories c ON c.id=f.category_id
+		LEFT JOIN
+			users u ON u.id=e.user_id
+		RIGHT JOIN
+			enclosures a ON a.entry_id=e.id
+		WHERE
+			%s %s
+	`
+
+	condition := e.buildCondition()
+	sorting := e.buildSorting()
+	query = fmt.Sprintf(query, condition, sorting)
+
+	rows, err := e.store.db.Query(query, e.args...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get entries: %v", err)
+	}
+	defer rows.Close()
+
+	entriesEnclosures := make(model.EntriesEnclosures, 0)
+	for rows.Next() {
+		var entryEnclosure model.EntryEnclosure
+		var tz string
+
+		err := rows.Scan(
+			&entryEnclosure.ID,
+			&entryEnclosure.UserID,
+			&entryEnclosure.FeedID,
+			&entryEnclosure.Hash,
+			&entryEnclosure.Date,
+			&entryEnclosure.Title,
+			&entryEnclosure.URL,
+			pq.Array(&entryEnclosure.Tags),
+			&entryEnclosure.EnclosureID,
+			&entryEnclosure.EnclosureURL,
+			&entryEnclosure.Size,
+			&entryEnclosure.MimeType,
+			&tz,
+		)
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to fetch entry row: %v", err)
+		}
+
+		// Make sure that timestamp fields contains timezone information (API)
+		entryEnclosure.Date = timezone.Convert(tz, entryEnclosure.Date)
+		entriesEnclosures = append(entriesEnclosures, &entryEnclosure)
+	}
+
+	return entriesEnclosures, nil
 }
 
 // GetEntryIDs returns a list of entry IDs that match the condition.
