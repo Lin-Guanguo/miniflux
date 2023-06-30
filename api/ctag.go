@@ -18,6 +18,7 @@ func (h *handler) createCTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: validate ctag
 	// if validationErr := validator.ValidateCTagCreation(h.store, userID, &ctagRequest); validationErr != nil {
 	// 	json.BadRequest(w, r, validationErr.Error())
 	// 	return

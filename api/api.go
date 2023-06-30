@@ -77,4 +77,5 @@ func Serve(router *mux.Router, store *storage.Storage, pool *worker.Pool) {
 	sr.HandleFunc("/entries/{entryID}/fetch-content", handler.fetchContent).Methods(http.MethodGet)
 	sr.HandleFunc("/search/entries", handler.searchEntries).Methods(http.MethodPost)
 	sr.HandleFunc("/search/entries/enclosures", handler.searchEntriesEnclosures).Methods(http.MethodPost)
+	sr.HandleFunc("/report/save", handler.report).Methods(http.MethodPost)
 }

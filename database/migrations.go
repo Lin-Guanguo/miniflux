@@ -692,4 +692,20 @@ var migrations = []func(tx *sql.Tx) error{
 		_, err = tx.Exec(sql)
 		return err
 	},
+	func(tx *sql.Tx) (err error) {
+		sql := `
+			CREATE TABLE reports (
+				id serial not null,
+				user_id int not null,
+				type text not null,
+				title text not null,
+				content text not null,
+				created_at timestamp with time zone not null default now(),
+				primary key (id),
+				foreign key (user_id) references users(id) on delete cascade
+			);
+		`
+		_, err = tx.Exec(sql)
+		return err
+	},
 }
