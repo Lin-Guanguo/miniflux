@@ -95,8 +95,13 @@ func Serve(router *mux.Router, store *storage.Storage, pool *worker.Pool) {
 	// CustomTags
 	uiRouter.HandleFunc("/ctags/{ctagID}/entry/{entryID}", handler.showCategoryEntryPage /* TODO */).Name("ctagEntry").Methods(http.MethodGet)
 	uiRouter.HandleFunc("/ctags", handler.showCTagListPage).Name("ctags").Methods(http.MethodGet)
+	uiRouter.HandleFunc("/ctags/create", handler.showCreateCTagPage).Name("createCTag").Methods(http.MethodGet)
+	uiRouter.HandleFunc("/ctags/save", handler.saveCTag).Name("saveCTag").Methods(http.MethodPost)
 	uiRouter.HandleFunc("/ctags/{ctagID}/entries", handler.showCTagEntriesPage).Name("ctagEntries").Methods(http.MethodGet)
 	uiRouter.HandleFunc("/ctags/{ctagID}/entries/all", handler.showCTagEntriesAllPage).Name("ctagEntriesAll").Methods(http.MethodGet)
+	uiRouter.HandleFunc("/ctags/{ctagID}/edit", handler.showEditCTagPage).Name("editCTag").Methods(http.MethodGet)
+	uiRouter.HandleFunc("/ctags/{ctagID}/update", handler.updateCTag).Name("updateCTag").Methods(http.MethodPost)
+	uiRouter.HandleFunc("/ctags/{ctagID}/remove", handler.removeCTag).Name("removeCTag").Methods(http.MethodPost)
 	uiRouter.HandleFunc("/ctags/{ctagID}/mark-all-as-read", handler.markCTagAsRead).Name("markCTagAsRead").Methods(http.MethodPost)
 
 	// Entry pages.

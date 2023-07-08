@@ -33,6 +33,21 @@
             <a href="{{ route "ctagEntries" "ctagID" .ctag.ID }}">{{ icon "show-unread-entries" }}{{ t "menu.show_only_unread_entries" }}</a>
         </li>
     {{ end }}
+
+        <li>
+            <a href="{{ route "editCTag" "ctagID" .ctag.ID }}">{{ icon "edit" }}{{ t "menu.edit_ctag" }}</a>
+        </li>
+
+        <li class="item-meta-icons-delete">
+            <a href="#"
+                data-confirm="true"
+                data-label-question="{{ t "confirm.question" }}"
+                data-label-yes="{{ t "confirm.yes" }}"
+                data-label-no="{{ t "confirm.no" }}"
+                data-label-loading="{{ t "confirm.loading" }}"
+                data-redirect-url="{{ route "ctags" }}"
+                data-url="{{ route "removeCTag" "ctagID" .ctag.ID }}">{{ icon "delete" }}<span class="icon-label">{{ t "action.remove" }}</span></a>
+        </li>
     </ul>
 </section>
 
