@@ -41,6 +41,10 @@ func ValidateCTagModification(store *storage.Storage, userID, ctagID int64, requ
 		return NewValidationError("error.ctag_already_exists")
 	}
 
+	if store.CTagChildExists(userID, ctagID) {
+		return NewValidationError("error.ctag_child_exists")
+	}
+
 	titleParts := strings.Split(request.Title, "/")
 	for i := 1; i < len(titleParts); i++ {
 		if !store.CTagTitleExists(userID, strings.Join(titleParts[:i], "/")) {
