@@ -26,6 +26,23 @@ func (s *Storage) CTagTitleExists(userID int64, title string) bool {
 	return result
 }
 
+// CTagChildExists checks if the given ctag exists child in the database.
+func (s *Storage) CTagChildExists(userID int64, ctagID int64) bool {
+	var result bool
+	query := `
+		SELECT true
+		FROM ctags
+		WHERE user_id=$1
+		AND lower(title) like
+			concat(
+				(SELECT lower(title) FROM ctags WHERE user_id=$2 AND id=$3 LIMIT 1),
+				'/%'
+			)
+		LIMIT 1`
+	s.db.QueryRow(query, userID, userID, ctagID).Scan(&result)
+	return result
+}
+
 // CTagIDExists checks if the given ctag exists into the database.
 func (s *Storage) CTagIDExists(userID, ctagID int64) bool {
 	var result bool

@@ -7,6 +7,7 @@ import (
 	"miniflux.app/http/request"
 	"miniflux.app/http/response/json"
 	"miniflux.app/model"
+	"miniflux.app/validator"
 )
 
 func (h *handler) createCTag(w http.ResponseWriter, r *http.Request) {
@@ -18,11 +19,10 @@ func (h *handler) createCTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: validate ctag
-	// if validationErr := validator.ValidateCTagCreation(h.store, userID, &ctagRequest); validationErr != nil {
-	// 	json.BadRequest(w, r, validationErr.Error())
-	// 	return
-	// }
+	if validationErr := validator.ValidateCTagCreation(h.store, userID, &ctagRequest); validationErr != nil {
+		json.BadRequest(w, r, validationErr.Error())
+		return
+	}
 
 	ctag, err := h.store.CreateCTag(userID, &ctagRequest)
 	if err != nil {
@@ -54,10 +54,10 @@ func (h *handler) updateCTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if validationErr := validator.ValidateCTagModification(h.store, userID, ctag.ID, &ctagRequest); validationErr != nil {
-	// 	json.BadRequest(w, r, validationErr.Error())
-	// 	return
-	// }
+	if validationErr := validator.ValidateCTagModification(h.store, userID, ctag.ID, &ctagRequest); validationErr != nil {
+		json.BadRequest(w, r, validationErr.Error())
+		return
+	}
 
 	ctagRequest.Patch(ctag)
 	err = h.store.UpdateCTag(ctag)
@@ -98,6 +98,11 @@ func (h *handler) removeCTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if validationErr := validator.ValidateCTagRemoval(h.store, userID, ctagID); validationErr != nil {
+		json.BadRequest(w, r, validationErr.Error())
+		return
+	}
+
 	if err := h.store.RemoveCTag(userID, ctagID); err != nil {
 		json.ServerError(w, r, err)
 		return
@@ -107,6 +112,7 @@ func (h *handler) removeCTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) addEntryCTags(w http.ResponseWriter, r *http.Request) {
+	// TODO: user check
 	// userID := request.UserID(r)
 
 	var entryCTagsRequest model.EntryCTagsRequest
@@ -114,11 +120,6 @@ func (h *handler) addEntryCTags(w http.ResponseWriter, r *http.Request) {
 		json.BadRequest(w, r, err)
 		return
 	}
-
-	// if validationErr := validator.ValidateCTagCreation(h.store, userID, &ctagRequest); validationErr != nil {
-	// 	json.BadRequest(w, r, validationErr.Error())
-	// 	return
-	// }
 
 	entryCTags, err := h.store.AddEntryCTags(&entryCTagsRequest)
 	if err != nil {
@@ -130,6 +131,7 @@ func (h *handler) addEntryCTags(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) removeEntryCTags(w http.ResponseWriter, r *http.Request) {
+	// TODO: user check
 	// userID := request.UserID(r)
 
 	var entryCTagsRequest model.EntryCTagsRequest
