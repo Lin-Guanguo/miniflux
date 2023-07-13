@@ -5,6 +5,7 @@
 package worker // import "miniflux.app/worker"
 
 import (
+	"math/rand"
 	"time"
 
 	"miniflux.app/config"
@@ -41,7 +42,20 @@ func (w *Worker) Run(c chan model.Job) {
 		}
 
 		if refreshErr != nil {
-			logger.Error("[Worker] Refreshing the feed #%d returned this error: %v", job.FeedID, refreshErr)
+			go func() {
+				for i := 0; i < 3; i++ {
+					retryDelay := time.Duration(rand.Intn(60*5) + 1) // 生成5分钟的随机延迟
+					logger.Error("[Worker] Refreshing the feed #%d returned this error: %v. will retry(%d) after %d seconds", job.FeedID, refreshErr, i, retryDelay)
+					time.Sleep(retryDelay * time.Second)
+					refreshErr := feedHandler.RefreshFeed(w.store, job.UserID, job.FeedID)
+					if refreshErr == nil {
+						return
+					}
+				}
+				logger.Error("[Worker] Refreshing the feed #%d returned this error: %v. already retry 3 times", job.FeedID, refreshErr)
+			}()
 		}
+
+		time.Sleep(time.Duration(5) * time.Second)
 	}
 }
