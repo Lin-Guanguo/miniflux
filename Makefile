@@ -97,7 +97,19 @@ windows-x86:
 	@ GOOS=windows GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
 
 run:
-	@ LOG_DATE_TIME=1 DEBUG=1 RUN_MIGRATIONS=1 go run main.go
+	DATABASE_URL=postgres://miniflux:secret@127.0.0.1:5432/miniflux?sslmode=disable \
+	RUN_MIGRATIONS=1 \
+	CREATE_ADMIN=1 \
+	ADMIN_USERNAME=linguanguo \
+	ADMIN_PASSWORD=passwd \
+	LISTEN_ADDR=0.0.0.0:8041 \
+	HTTP_CLIENT_PROXY=http://127.0.0.1:10809 \
+	HTTP_CLIENT_MAX_BODY_SIZE=50 \
+	HTTP_CLIENT_TIMEOUT=60 \
+	LOG_DATE_TIME=1 DEBUG=1 RUN_MIGRATIONS=1 go run main.go
+
+build-my-docker:
+	docker build -t linguanguo/miniflux -f ./packaging/docker/alpine/Dockerfile .
 
 clean:
 	@ rm -f $(APP)-* $(APP) $(APP)*.rpm $(APP)*.deb
