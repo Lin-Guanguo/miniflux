@@ -2,7 +2,7 @@ FROM golang:alpine AS build
 RUN apk add --no-cache --update git
 ADD . /go/src/app
 WORKDIR /go/src/app
-RUN go build \
+RUN go env -w  GOPROXY=https://goproxy.cn,direct && go build \
     -o miniflux \
     -ldflags="-s -w -X 'miniflux.app/version.Version=`git describe --tags --abbrev=0`' -X 'miniflux.app/version.Commit=`git rev-parse --short HEAD`' -X 'miniflux.app/version.BuildDate=`date +%FT%T%z`'" \
     main.go
