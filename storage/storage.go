@@ -8,16 +8,39 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"miniflux.app/logger"
 )
 
 // Storage handles all operations related to the database.
 type Storage struct {
-	db *sql.DB
+	db *DBWrapper
+}
+
+type DBWrapper struct {
+	*sql.DB
+}
+
+func (db *DBWrapper) Exec(query string, args ...interface{}) (sql.Result, error) {
+	logger.Debug("[Database] SQL:%s, args:%v", query, args)
+	return db.DB.Exec(query, args...)
+}
+
+func (db *DBWrapper) Query(query string, args ...any) (*sql.Rows, error) {
+	logger.Debug("[Database] SQL:%s, args:%v", query, args)
+	return db.DB.Query(query, args...)
+}
+
+func (db *DBWrapper) QueryRow(query string, args ...any) *sql.Row {
+	logger.Debug("[Database] SQL:%s, args:%v", query, args)
+	return db.DB.QueryRow(query, args...)
 }
 
 // NewStorage returns a new Storage.
 func NewStorage(db *sql.DB) *Storage {
-	return &Storage{db}
+	return &Storage{
+		&DBWrapper{db},
+	}
 }
 
 // DatabaseVersion returns the version of the database which is in use.
