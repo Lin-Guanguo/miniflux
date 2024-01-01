@@ -247,17 +247,17 @@ func (s *Storage) GetReadTime(entry *model.Entry, feed *model.Feed) int {
 
 // cleanupEntries deletes from the database entries marked as "removed" and not visible anymore in the feed.
 func (s *Storage) cleanupEntries(feedID int64, entryHashes []string) error {
-	query := `
-		DELETE FROM
-			entries
-		WHERE
-			feed_id=$1
-		AND
-			id IN (SELECT id FROM entries WHERE feed_id=$2 AND status=$3 AND NOT (hash=ANY($4)))
-	`
-	if _, err := s.db.Exec(query, feedID, feedID, model.EntryStatusRemoved, pq.Array(entryHashes)); err != nil {
-		return fmt.Errorf(`store: unable to cleanup entries: %v`, err)
-	}
+	// query := `
+	// 	DELETE FROM
+	// 		entries
+	// 	WHERE
+	// 		feed_id=$1
+	// 	AND
+	// 		id IN (SELECT id FROM entries WHERE feed_id=$2 AND status=$3 AND NOT (hash=ANY($4)))
+	// `
+	// if _, err := s.db.Exec(query, feedID, feedID, model.EntryStatusRemoved, pq.Array(entryHashes)); err != nil {
+	// 	return fmt.Errorf(`store: unable to cleanup entries: %v`, err)
+	// }
 
 	return nil
 }
@@ -306,28 +306,29 @@ func (s *Storage) RefreshFeedEntries(userID, feedID int64, entries model.Entries
 
 // ArchiveEntries changes the status of entries to "removed" after the given number of days.
 func (s *Storage) ArchiveEntries(status string, days, limit int) (int64, error) {
-	if days < 0 || limit <= 0 {
-		return 0, nil
-	}
+	// if days < 0 || limit <= 0 {
+	// 	return 0, nil
+	// }
 
-	query := `
-		UPDATE
-			entries
-		SET
-			status='removed'
-		WHERE
-			id=ANY(SELECT id FROM entries WHERE status=$1 AND starred is false AND share_code='' AND created_at < now () - '%d days'::interval ORDER BY created_at ASC LIMIT %d)
-	`
+	// query := `
+	// 	UPDATE
+	// 		entries
+	// 	SET
+	// 		status='removed'
+	// 	WHERE
+	// 		id=ANY(SELECT id FROM entries WHERE status=$1 AND starred is false AND share_code='' AND created_at < now () - '%d days'::interval ORDER BY created_at ASC LIMIT %d)
+	// `
 
-	result, err := s.db.Exec(fmt.Sprintf(query, days, limit), status)
-	if err != nil {
-		return 0, fmt.Errorf(`store: unable to archive %s entries: %v`, status, err)
-	}
+	// result, err := s.db.Exec(fmt.Sprintf(query, days, limit), status)
+	// if err != nil {
+	// 	return 0, fmt.Errorf(`store: unable to archive %s entries: %v`, status, err)
+	// }
 
-	count, err := result.RowsAffected()
-	if err != nil {
-		return 0, fmt.Errorf(`store: unable to get the number of rows affected: %v`, err)
-	}
+	// count, err := result.RowsAffected()
+	// if err != nil {
+	// 	return 0, fmt.Errorf(`store: unable to get the number of rows affected: %v`, err)
+	// }
+	var count int64 = 0
 
 	return count, nil
 }
@@ -418,19 +419,22 @@ func (s *Storage) ToggleBookmark(userID int64, entryID int64) error {
 
 // FlushHistory set all entries with the status "read" to "removed".
 func (s *Storage) FlushHistory(userID int64) error {
-	query := `
-		UPDATE
-			entries
-		SET
-			status=$1,
-			changed_at=now()
-		WHERE
-			user_id=$2 AND status=$3 AND starred is false AND share_code=''
-	`
-	_, err := s.db.Exec(query, model.EntryStatusRemoved, userID, model.EntryStatusRead)
-	if err != nil {
-		return fmt.Errorf(`store: unable to flush history: %v`, err)
-	}
+	// disable FlushHistory.
+	// 我不希望删除entry
+
+	// query := `
+	// 	UPDATE
+	// 		entries
+	// 	SET
+	// 		status=$1,
+	// 		changed_at=now()
+	// 	WHERE
+	// 		user_id=$2 AND status=$3 AND starred is false AND share_code=''
+	// `
+	// _, err := s.db.Exec(query, model.EntryStatusRemoved, userID, model.EntryStatusRead)
+	// if err != nil {
+	// 	return fmt.Errorf(`store: unable to flush history: %v`, err)
+	// }
 
 	return nil
 }
